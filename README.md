@@ -4,6 +4,21 @@ Reference [Splunk Docs on Fieldsummary Command](https://docs.splunk.com/Document
 
 ***I recommend you use | loadjob when using these, as it's best to run `| map` under controlled conditions! Limit number on `maxvals` setting to avoid high compute!***
 
+
+Other Presentations I recommend:
+
+| Presentation Title                         | Link                                                                                                                                                 |
+|--------------------------------------------|------------------------------------------------------------------------------------------------------------------------------------------------------|
+| Security Ninjutsu Part 4                   | <http://conf.splunk.com/files/2017/slides/security-ninjutsu-part-four-attackers-be-gone-in-45-minutes-of-epic-spl.pdf>)                              |
+| Ninjutsu Part 6                            | <https://www.davidveuve.com/splunk.html#ninjutsupartsix>)                                                                                            |
+| Tricks for better SPL                      | <https://conf.splunk.com/files/2019/slides/FN1300.pdf>                                                                                               |
+| Lesser Known Search Commands               | <https://conf.splunk.com/files/2019/slides/FN1061.pdf>                                                                                               |
+| SPL Tips - How to fall in love with Splunk | <https://conf.splunk.com/files/2019/slides/FN1300.pdf>                                                                                               |
+| Master Joining Datasets without Using Join | <https://conf.splunk.com/files/2020/slides/TRU1761C.pdf>                                                                                             |
+| Turning Security Use Cases into SPL        | <https://static.rainfocus.com/splunk/splunkconf18/sess/1523489574149001lr6z/finalPDF/SEC1583_TurningSecurityUseCases_Final_1538510573435001VmSg.pdf> |
+
+
+
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -109,11 +124,11 @@ iseval = 0
 
 ### Customization Options
 
-| Line | Customization |
-| ---- | ----- |
-| `where (tonumber(rtrim(diffPerc,"%")) > 10)` | Modify minimum % field coverage for a field to be included in results |
-| `fieldsummary maxvals=[int]` | Determines how many unique values are returned in the values field. Caution: more values means higher compute. |
-| `map maxsearches=[int]` | Make sure the maxsearches for your map command is set high enough to account for the variance in your group-by |
+| Line                                         | Customization                                                                                                  |
+|----------------------------------------------|----------------------------------------------------------------------------------------------------------------|
+| `where (tonumber(rtrim(diffPerc,"%")) > 10)` | Modify minimum % field coverage for a field to be included in results                                          |
+| `fieldsummary maxvals=[int]`                 | Determines how many unique values are returned in the values field. Caution: more values means higher compute. |
+| `map maxsearches=[int]`                      | Make sure the maxsearches for your map command is set high enough to account for the variance in your group-by |
 
 
 
