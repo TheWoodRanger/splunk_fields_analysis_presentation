@@ -7,15 +7,15 @@ Reference [Splunk Docs on Fieldsummary Command](https://docs.splunk.com/Document
 
 Other Presentations I recommend:
 
-| Presentation Title                         | Link                                                                                                                                                 |
-|--------------------------------------------|------------------------------------------------------------------------------------------------------------------------------------------------------|
-| Security Ninjutsu Part 4                   | <http://conf.splunk.com/files/2017/slides/security-ninjutsu-part-four-attackers-be-gone-in-45-minutes-of-epic-spl.pdf>)                              |
-| Ninjutsu Part 6                            | <https://www.davidveuve.com/splunk.html#ninjutsupartsix>)                                                                                            |
-| Tricks for better SPL                      | <https://conf.splunk.com/files/2019/slides/FN1300.pdf>                                                                                               |
-| Lesser Known Search Commands               | <https://conf.splunk.com/files/2019/slides/FN1061.pdf>                                                                                               |
-| SPL Tips - How to fall in love with Splunk | <https://conf.splunk.com/files/2019/slides/FN1300.pdf>                                                                                               |
-| Master Joining Datasets without Using Join | <https://conf.splunk.com/files/2020/slides/TRU1761C.pdf>                                                                                             |
-| Turning Security Use Cases into SPL        | <https://static.rainfocus.com/splunk/splunkconf18/sess/1523489574149001lr6z/finalPDF/SEC1583_TurningSecurityUseCases_Final_1538510573435001VmSg.pdf> |
+| Presentations                                                                                                                                                                             |
+|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| [Security Ninjutsu Part 4](http://conf.splunk.com/files/2017/slides/security-ninjutsu-part-four-attackers-be-gone-in-45-minutes-of-epic-spl.pdf)                                          |
+| [Ninjutsu Part 6](https://www.davidveuve.com/splunk.html#ninjutsupartsix)                                                                                                                 |
+| [Tricks for better SPL](https://conf.splunk.com/files/2019/slides/FN1300.pdf)                                                                                                             |
+| [Lesser Known Search Commands](https://conf.splunk.com/files/2019/slides/FN1061.pdf)                                                                                                      |
+| [SPL Tips - How to fall in love with Splunk](https://conf.splunk.com/files/2019/slides/FN1300.pdf)                                                                                        |
+| [Master Joining Datasets without Using Join](https://conf.splunk.com/files/2020/slides/TRU1761C.pdf)                                                                                      |
+| [Turning Security Use Cases into SPL](https://static.rainfocus.com/splunk/splunkconf18/sess/1523489574149001lr6z/finalPDF/SEC1583_TurningSecurityUseCases_Final_1538510573435001VmSg.pdf) |
 
 
 
