@@ -2,7 +2,14 @@
 
 Reference [Splunk Docs on Fieldsummary Command](https://docs.splunk.com/Documentation/Splunk/latest/SearchReference/Fieldsummary)
 
-***I recommend you use | loadjob when using these, as it's best to run `| map` under controlled conditions! Limit number on `maxvals` setting to avoid high compute!***
+## A Word of Warning!
+
+***I recommend you use | loadjob when using these, as it's best to run `| map` under controlled conditions! Limit number on `maxvals` setting to avoid high compute! Lower `maxvals` or specify more strict initial filters for your map searches if you experience long runtimes/too much compute.***
+
+
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 
 Other Presentations I recommend:
