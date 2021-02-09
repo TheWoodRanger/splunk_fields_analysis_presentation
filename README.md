@@ -26,27 +26,102 @@ Reference [Splunk Docs on Fieldsummary Command](https://docs.splunk.com/Document
 ### fieldsummary_simple Macro Conf
 
 ```conf
-
+[fieldsummary_simple]
+definition = stats first(*) AS * \
+| transpose 0 column_name="field" \
+| rename "row 1" AS first_value
+iseval = 0
 ```
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
-## Notes on Use
+### Fields Derivation Query
+
+- Gathers field object information and combines it together into a single view
+  - Calculated Fields / props.conf / transforms.conf / Aliases / Lookups
+- Outputs final field set of common elements like title, field name, stanza, app, etc, then stores all conf-specific configurations/properties in the `conf_specific_properties_mv` field
+
+
+```spl
+| makeresults | where 1==2 
+| append 
+    [| rest /services/data/props/calcfields 
+    | dedup id 
+    | rename field.name AS field_name, eai:acl.* AS acl_* 
+    | table dataSource, title, field_name, stanza, type, attribute, acl_app, acl_owner, acl_sharing, value 
+    | eval dataSource = "props-calcfields"] 
+| append 
+    [| rest /services/data/props/extractions 
+    | dedup id 
+    | rename eai:acl.* AS acl_* 
+    | rex field=attribute "^[^-]+-(?<field_name>.+)" 
+    | table dataSource, title, field_name, stanza, type, attribute, acl_app, acl_owner, acl_sharing, value 
+    | eval dataSource = "props-extractions"] 
+| append 
+    [| rest /services/data/props/fieldaliases 
+    | dedup id 
+    | foreach alias.* 
+        [| eval conf_specific_properties_mv = case(
+            isnull(conf_specific_properties_mv) AND isnotnull('<<FIELD>>'), "<<FIELD>>::::" . '<<FIELD>>', 
+            isnotnull(conf_specific_properties_mv) AND isnotnull('<<FIELD>>'), mvappend(conf_specific_properties_mv, "<<FIELD>>::::" . '<<FIELD>>'), 
+            isnotnull(conf_specific_properties_mv) AND isnull('<<FIELD>>'), conf_specific_properties_mv
+            )] 
+    | rename eai:acl.* AS acl_* 
+    | rex field=attribute "^[^-]+-(?<field_name>.+)" 
+    | table dataSource, title, field_name, stanza, type, attribute, acl_app, acl_owner, acl_sharing, value, conf_specific_properties_mv 
+    | eval dataSource = "props-fieldaliases"] 
+| append 
+    [| rest /services/data/transforms/extractions 
+    | dedup id 
+    | rename eai:acl.* AS acl_*, REGEX AS value 
+    | foreach * 
+        [| eval <<FIELD>> = if( match('<<FIELD>>', "."), '<<FIELD>>', null() )] 
+    | foreach FORMAT, CAN_OPTIMIZE, CLEAN_KEYS, DEFAULT_VALUE, SOURCE_KEY, DEST_KEY, WRITE_META, DELIMS, FIELDS, KEEP_EMPTY_VALS, LOOKAHEAD, MATCH_LIMIT, MV_ADD, REPEAT_MATCH 
+        [| eval conf_specific_properties_mv = case(isnull(conf_specific_properties_mv) AND isnotnull('<<FIELD>>'), "<<FIELD>>::::" . '<<FIELD>>', isnotnull(conf_specific_properties_mv) AND isnotnull('<<FIELD>>'), mvappend(conf_specific_properties_mv, "<<FIELD>>::::" . '<<FIELD>>'), isnotnull(conf_specific_properties_mv) AND isnull('<<FIELD>>'), conf_specific_properties_mv)] 
+    | eval stanza = title 
+    | table dataSource, title, stanza, acl_app, acl_owner, acl_sharing, value, conf_specific_properties_mv 
+    | eval dataSource = "transforms-extractions"] 
+| append 
+    [| rest /services/data/props/lookups 
+    | dedup id 
+    | rename eai:acl.* AS acl_*, lookup.field.output.* AS field_output_*, lookup.field.input.* AS field_input_*, transform AS transforms_stanza 
+    | foreach * 
+        [| eval <<FIELD>> = if( match('<<FIELD>>', "."), '<<FIELD>>', null() )] 
+    | foreach field_output_*, field_input_* 
+        [| eval field_name = case(
+            isnull(field_name) AND isnotnull('<<FIELD>>'), "<<FIELD>>::::" . '<<FIELD>>', 
+            isnotnull(field_name) AND isnotnull('<<FIELD>>'), mvappend(field_name, "<<FIELD>>::::" . '<<FIELD>>'), 
+            isnotnull(field_name) AND isnull('<<FIELD>>'), field_name
+            )] 
+    | foreach field_name, overwrite, transforms_stanza 
+        [| eval conf_specific_properties_mv = case(isnull(conf_specific_properties_mv) AND isnotnull('<<FIELD>>') AND match("<<FIELD>>", "field_name"), '<<FIELD>>', isnull(conf_specific_properties_mv) AND isnotnull('<<FIELD>>'), "<<FIELD>>::::" . '<<FIELD>>', isnotnull(conf_specific_properties_mv) AND isnotnull('<<FIELD>>') AND match("<<FIELD>>", "field_name"), mvap(conf_specific_properties_mv, '<<FIELD>>'), isnotnull(conf_specific_properties_mv) AND isnotnull('<<FIELD>>'), mvappend(conf_specific_properties_mv, "<<FIELD>>::::" . '<<FIELD>>'), isnotnull(conf_specific_properties_mv) AND isnull('<<FIELD>>'), conf_specific_properties_mv)] 
+    | eval stanza = title 
+    | table dataSource, field_name, title, stanza, type, attribute, acl_app, acl_owner, acl_sharing, value, conf_specific_properties_mv 
+    | eval dataSource = "props-lookups (automatic lookups)"] 
+| table dataSource, field_name, stanza, type, attribute, acl_app, acl_owner, acl_sharing, title, value, conf_specific_properties_mv
+```
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+## Notes on Using `| fieldsummary` Examples Below
 
 ### Customization Options
 
 | Line | Customization |
 | ---- | ----- |
-| `| where (tonumber(rtrim(diffPerc,"%")) > 10)` | Modify minimum % field coverage for a field to be included in results |
-| `| fieldsummary maxvals=(number)` | Determines how many unique values are returned in the values field. Caution: more values means higher compute. |
+| `where (tonumber(rtrim(diffPerc,"%")) > 10)` | Modify minimum % field coverage for a field to be included in results |
+| `fieldsummary maxvals=[int]` | Determines how many unique values are returned in the values field. Caution: more values means higher compute. |
+| `map maxsearches=[int]` | Make sure the maxsearches for your map command is set high enough to account for the variance in your group-by |
+
 
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 ## Fieldsummary Examples
 
-**Remove all `| eval comment` lines if desired.**
+**Note: Remove all `| eval comment` lines if desired.**
 
 ### Fieldsummary - No Group-By
 
@@ -300,74 +375,4 @@ END row deduplication/aggregation of duplicate information across multiple field
 | sort 0 -count 
 | table index, sourcetype, source, field, count, diffPerc, numeric_count, distinctValues, values
 | rename count as "Count of Events w/ Field", diffPerc as "Perc of Total Events w/ Field", distinctValues as "Distinct Values", numeric_count as "Numeric Count", values as "Top values with count of each"
-```
-
-
-----------------------------------------------------------------------------------------------------------------------------------------------------------------
-----------------------------------------------------------------------------------------------------------------------------------------------------------------
-
-### Fields Derivation Query
-
-- Gathers field object information and combines it together into a single view
-  - Calculated Fields / props.conf / transforms.conf / Aliases / Lookups
-- Outputs final field set of common elements like title, field name, stanza, app, etc, then stores all conf-specific configurations/properties in the `conf_specific_properties_mv` field
-
-
-```spl
-| makeresults | where 1==2 
-| append 
-    [| rest /services/data/props/calcfields 
-    | dedup id 
-    | rename field.name AS field_name, eai:acl.* AS acl_* 
-    | table dataSource, title, field_name, stanza, type, attribute, acl_app, acl_owner, acl_sharing, value 
-    | eval dataSource = "props-calcfields"] 
-| append 
-    [| rest /services/data/props/extractions 
-    | dedup id 
-    | rename eai:acl.* AS acl_* 
-    | rex field=attribute "^[^-]+-(?<field_name>.+)" 
-    | table dataSource, title, field_name, stanza, type, attribute, acl_app, acl_owner, acl_sharing, value 
-    | eval dataSource = "props-extractions"] 
-| append 
-    [| rest /services/data/props/fieldaliases 
-    | dedup id 
-    | foreach alias.* 
-        [| eval conf_specific_properties_mv = case(
-            isnull(conf_specific_properties_mv) AND isnotnull('<<FIELD>>'), "<<FIELD>>::::" . '<<FIELD>>', 
-            isnotnull(conf_specific_properties_mv) AND isnotnull('<<FIELD>>'), mvappend(conf_specific_properties_mv, "<<FIELD>>::::" . '<<FIELD>>'), 
-            isnotnull(conf_specific_properties_mv) AND isnull('<<FIELD>>'), conf_specific_properties_mv
-            )] 
-    | rename eai:acl.* AS acl_* 
-    | rex field=attribute "^[^-]+-(?<field_name>.+)" 
-    | table dataSource, title, field_name, stanza, type, attribute, acl_app, acl_owner, acl_sharing, value, conf_specific_properties_mv 
-    | eval dataSource = "props-fieldaliases"] 
-| append 
-    [| rest /services/data/transforms/extractions 
-    | dedup id 
-    | rename eai:acl.* AS acl_*, REGEX AS value 
-    | foreach * 
-        [| eval <<FIELD>> = if( match('<<FIELD>>', "."), '<<FIELD>>', null() )] 
-    | foreach FORMAT, CAN_OPTIMIZE, CLEAN_KEYS, DEFAULT_VALUE, SOURCE_KEY, DEST_KEY, WRITE_META, DELIMS, FIELDS, KEEP_EMPTY_VALS, LOOKAHEAD, MATCH_LIMIT, MV_ADD, REPEAT_MATCH 
-        [| eval conf_specific_properties_mv = case(isnull(conf_specific_properties_mv) AND isnotnull('<<FIELD>>'), "<<FIELD>>::::" . '<<FIELD>>', isnotnull(conf_specific_properties_mv) AND isnotnull('<<FIELD>>'), mvappend(conf_specific_properties_mv, "<<FIELD>>::::" . '<<FIELD>>'), isnotnull(conf_specific_properties_mv) AND isnull('<<FIELD>>'), conf_specific_properties_mv)] 
-    | eval stanza = title 
-    | table dataSource, title, stanza, acl_app, acl_owner, acl_sharing, value, conf_specific_properties_mv 
-    | eval dataSource = "transforms-extractions"] 
-| append 
-    [| rest /services/data/props/lookups 
-    | dedup id 
-    | rename eai:acl.* AS acl_*, lookup.field.output.* AS field_output_*, lookup.field.input.* AS field_input_*, transform AS transforms_stanza 
-    | foreach * 
-        [| eval <<FIELD>> = if( match('<<FIELD>>', "."), '<<FIELD>>', null() )] 
-    | foreach field_output_*, field_input_* 
-        [| eval field_name = case(
-            isnull(field_name) AND isnotnull('<<FIELD>>'), "<<FIELD>>::::" . '<<FIELD>>', 
-            isnotnull(field_name) AND isnotnull('<<FIELD>>'), mvappend(field_name, "<<FIELD>>::::" . '<<FIELD>>'), 
-            isnotnull(field_name) AND isnull('<<FIELD>>'), field_name
-            )] 
-    | foreach field_name, overwrite, transforms_stanza 
-        [| eval conf_specific_properties_mv = case(isnull(conf_specific_properties_mv) AND isnotnull('<<FIELD>>') AND match("<<FIELD>>", "field_name"), '<<FIELD>>', isnull(conf_specific_properties_mv) AND isnotnull('<<FIELD>>'), "<<FIELD>>::::" . '<<FIELD>>', isnotnull(conf_specific_properties_mv) AND isnotnull('<<FIELD>>') AND match("<<FIELD>>", "field_name"), mvap(conf_specific_properties_mv, '<<FIELD>>'), isnotnull(conf_specific_properties_mv) AND isnotnull('<<FIELD>>'), mvappend(conf_specific_properties_mv, "<<FIELD>>::::" . '<<FIELD>>'), isnotnull(conf_specific_properties_mv) AND isnull('<<FIELD>>'), conf_specific_properties_mv)] 
-    | eval stanza = title 
-    | table dataSource, field_name, title, stanza, type, attribute, acl_app, acl_owner, acl_sharing, value, conf_specific_properties_mv 
-    | eval dataSource = "props-lookups (automatic lookups)"] 
-| table dataSource, field_name, stanza, type, attribute, acl_app, acl_owner, acl_sharing, title, value, conf_specific_properties_mv
 ```
