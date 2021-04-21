@@ -18,11 +18,6 @@
     - [Field Summarization Utility - Multiple Group-by: `index`, `sourcetype`, `source`](#field-summarization-utility---multiple-group-by-index-sourcetype-source)
       - [Field Summarization Utilities Optimization - Dynamic Filter String Example](#field-summarization-utilities-optimization---dynamic-filter-string-example)
 
-Relevant reference Splunk documentation: 
-
-- [Splunk Docs on Fieldsummary Command](https://docs.splunk.com/Documentation/Splunk/latest/SearchReference/Fieldsummary)
-- [Splunk Eval Multivalue Functions](https://docs.splunk.com/Documentation/Splunk/latest/SearchReference/MultivalueEvalFunctions)
-
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 ## Words of Warning!
@@ -33,7 +28,10 @@ Relevant reference Splunk documentation:
 
 ***If those optimizations don't work and you experience issues with the `| map` searches, utilize dynamic filter strategies as covered in the primary presentation materials with an example below under [Field Summarization Utilities Optimization - Dynamic Filter String Example](#field-summarization-utilities-optimization---dynamic-filter-string-example)***
 
+Relevant reference Splunk documentation:
 
+- [Splunk Docs on Fieldsummary Command](https://docs.splunk.com/Documentation/Splunk/latest/SearchReference/Fieldsummary)
+- [Splunk Eval Multivalue Functions](https://docs.splunk.com/Documentation/Splunk/latest/SearchReference/MultivalueEvalFunctions)
 
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -508,7 +506,7 @@ END row deduplication/aggregation of duplicate information across multiple field
 | rename count AS "Count of Events w/ Field", diffPerc AS "Perc of Total Events w/ Field", distinctValues AS "Distinct Values", numeric_count AS "Numeric Count", values AS "Top values with count of each"
 ```
 
---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 #### Field Summarization Utilities Optimization - Dynamic Filter String Example
 
