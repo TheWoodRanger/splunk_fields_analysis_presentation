@@ -1,0 +1,12 @@
+| datamodelsimple type="models"
+| map maxsearches=1000 search="| datamodelsimple type=objects datamodel=$datamodel$ 
+    | eval datamodel=\"$datamodel$\""
+| map maxsearches=1000 search="| datamodelsimple type=attributes datamodel=$datamodel$ object=$object$ nodename=$lineage$ 
+    | eval datamodel=\"$datamodel$\"
+    | eval object=\"$object$\"
+    | eval lineage=\"$lineage$\""
+| eval comment = if(1==1, null(), "
+These map commands have a seemingly extreme maxsearches setting, but be assured that the datamodelsimple command reads the internal configuration of the SH host and doesn't require much compute.
+
+This search is running to compile a breakout of all datamodels, objects, and fields configured in the environment.")
+| rename attribute AS field, lineage AS inheritance

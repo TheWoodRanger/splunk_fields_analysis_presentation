@@ -1,0 +1,71 @@
+index=_internal sourcetype=splunkd 
+| eval comment = if(1==1, null(), "
+START initial fieldsummary command execution.
+    Note: Remove any fields desired. Modify 'maxvals' setting to desired number of output values. 'DistinctValues' calculation is up to 5x the maxvals specified.
+    Fieldsummary command accepts list of fields as filter. Leave empty for '*' all fields.
+") 
+| fields - date_*, host, linecount, punct, splunk_server*, timestartpos, timeendpos, timestamp 
+| fieldsummary maxvals=5 
+| eval comment = if(1==1, null(), "
+END initial fieldsummary command execution.
+
+
+START fieldsummary transformations and base calculations/filtering.
+") 
+| eval distinctValues = case(
+    (is_exact == 1), (distinct_count . " (Exact)"),
+    (is_exact == 0),(distinct_count . " (Estimate)")
+    ) 
+| eventstats max(count) AS eventCount 
+| eval diffPerc = (round(((count / eventCount) * 100),1) . "%") 
+| eval comment = if(1==1, null(), "
+    Note: Modify | where command below based on desired minimum % of events containing a field with values for that field to be displayed.")
+| where (tonumber(rtrim(diffPerc,"%")) > 10) 
+| fields - distinct_count, eventCount, is_exact, mean, max, min, stdev
+| eval comment = if(1==1, null(), "
+END fieldsummary transformations and base calculations/filtering.
+
+
+START reformatting of 'values' JSON data into readable Multivalue field.
+") 
+| spath input=values path="{}.value" output="value_strings" 
+| spath input=values path="{}.count" output="value_counts" 
+| eval comment = if(1==1, null(), "
+    Note: Since the value could be anything of any format, we wrap the value_strings field values with doublequotes through using nested multivalue functions without expanding by using ':::' as a delimiter to concat the values with doublequotes, then split them back apart.") 
+| eval value_strings = split("\"" . mvjoin(value_strings, "\":::\"") . "\"", ":::") 
+| eval comment = if(1==1, null(), "
+    Note: Concat the two into a single MV field, formatted as 'value_strings: value_counts' using mvzip.")
+| eval values = mvzip(value_strings, value_counts, ": ") 
+| fields - value_counts, value_strings 
+| eval comment = if(1==1, null(), "
+END reformatting of 'values' JSON data into readable Multivalue field.
+
+
+START column alignment formatting for values field. 
+    Note: column alignment, if calculated on the aggregate dataset without GROUPBY, can result in wrapped lines if the dataset contains any fields with long values.") 
+| mvexpand values 
+| rex field=values "^(?<fieldValueString>\".+\"):\s(?<fieldValueCount>\d+)" 
+| eventstats max(eval(len(fieldValueString))) AS max_fieldValue_len BY field 
+| eval whitespaceInsertAmount = ((max_fieldValue_len + 4) - len(fieldValueString)) 
+| eval values = fieldValueString . substr("                                                                                                                                                           ",1,whitespaceInsertAmount) . ":" . fieldValueCount 
+| fields - whitespaceInsertAmount, max_fieldValue_len, fieldValueString, fieldValueCount 
+| stats list(values) AS values, values(values) AS values_ThisMustBeSeparateToRetainOrdering, values(*) AS * BY field 
+| fields - values_ThisMustBeSeparateToRetainOrdering
+| eval comment = if(1==1, null(), "
+END column alignment formatting for values field.
+
+
+START row deduplication/aggregation of duplicate information across multiple fields into a single row through using a md5 hash. If all the columns EXCEPT field name are equivalent, aggregate.
+") 
+| eval valuesHash = md5(mvjoin(values, ":::")) 
+| eval checkSum = md5( count . ":::" . diffPerc . ":::" . numeric_count . ":::" . distinctValues . ":::" . valuesHash) 
+| eventstats values(field) AS field BY checkSum 
+| sort 0 - checkSum 
+| streamstats count AS duplicateCount BY checkSum 
+| where duplicateCount < 2 
+| eval comment = if(1==1, null(), "
+END row deduplication/aggregation of duplicate information across multiple fields into a single row through using a md5 hash.
+") 
+| sort 0 - count 
+| table field, count, diffPerc, numeric_count, distinctValues, values
+| rename count AS "Count of Events w/ Field", diffPerc AS "Perc of Total Events w/ Field", distinctValues AS "Distinct Values", numeric_count AS "Numeric Count", values AS "Top values with count of each"
