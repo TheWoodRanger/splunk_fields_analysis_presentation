@@ -69,7 +69,7 @@ Relevant reference Splunk documentation:
 - A simple version of a fieldsummary.
 - Provides a very direct “show me the fields” view that can save a lot of time and be run on the fly.
 
-!["Simple Fieldsummary" Output](assets/Fieldssummary%20Simple%20Output.png)
+!["Simple Fieldsummary" Output](assets/Fieldsummary%20Simple%20Output.png)
 
 **NOTE: This will return the first value found in any event, not just the first event’s values. Returns only the first value of multi-value fields.**
 
