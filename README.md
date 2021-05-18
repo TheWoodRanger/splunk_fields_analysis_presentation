@@ -28,7 +28,7 @@ Slide deck can be found under assets: [What's in my Data? Slide Deck from Bsides
 Session recording available on YouTube under the Splunk Community Channel:
 
 [![Session Video Recording](http://img.youtube.com/vi/C3oN8nMVXZ8/0.jpg)](https://www.youtube.com/watch?v=C3oN8nMVXZ8)
-
+[Youtube Link to Recording](https://www.youtube.com/watch?v=C3oN8nMVXZ8)
 
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
