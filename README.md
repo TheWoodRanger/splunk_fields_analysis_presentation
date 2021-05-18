@@ -1,6 +1,7 @@
 # What's in my Data? Field Analysis for the Advanced Engineer - Presentation Reference Materials
 
 - [What's in my Data? Field Analysis for the Advanced Engineer - Presentation Reference Materials](#whats-in-my-data-field-analysis-for-the-advanced-engineer---presentation-reference-materials)
+  - [Session Recording + Slides](#session-recording--slides)
   - [Words of Warning!](#words-of-warning)
   - [Other Splunk .conf Presentations I recommend](#other-splunk-conf-presentations-i-recommend)
   - [Using `| loadjob` Example](#using--loadjob-example)
@@ -17,6 +18,17 @@
     - [Field Summarization Utility - Single Group-by: `index`](#field-summarization-utility---single-group-by-index)
     - [Field Summarization Utility - Multiple Group-by: `index`, `sourcetype`, `source`](#field-summarization-utility---multiple-group-by-index-sourcetype-source)
       - [Field Summarization Utilities Optimization - Dynamic Filter String Example](#field-summarization-utilities-optimization---dynamic-filter-string-example)
+
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+## Session Recording + Slides
+
+Slide deck can be found under assets: [What's in my Data? Slide Deck from Bsides 21](assets/Field%20Analysis%20for%20the%20Advanced%20Engineer%20Slide%20Deck%20-Ryan%20Wood%20-%20Bsides%20Splunk%2021.pdf)
+
+Session recording available on YouTube under the Splunk Community Channel:
+
+[![Session Video Recording](http://img.youtube.com/vi/C3oN8nMVXZ8/0.jpg)](https://www.youtube.com/watch?v=C3oN8nMVXZ8)
+
 
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
