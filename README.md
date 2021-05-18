@@ -23,7 +23,7 @@
 
 ## Session Recording + Slides
 
-Slide deck can be found under assets: [What's in my Data? Slide Deck from Bsides 21](assets/Field%20Analysis%20for%20the%20Advanced%20Engineer%20Slide%20Deck%20-Ryan%20Wood%20-%20Bsides%20Splunk%2021.pdf)
+Slide deck can be found under assets: [What's in my Data? Slide Deck from Bsides 21](Slide%20Deck%20-%20Field%20Analysis%20for%20the%20Advanced%20Engineer%20-%20Ryan%20Wood%20-%20Bsides%20Splunk%2021.pdf)
 
 Session recording available on YouTube under the Splunk Community Channel:
 
