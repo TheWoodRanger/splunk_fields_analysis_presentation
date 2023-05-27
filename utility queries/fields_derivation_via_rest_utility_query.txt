@@ -1,37 +1,32 @@
-| makeresults | where 1==2 
-| append 
-    [| rest splunk_server=* /servicesNS/-/-/data/props/calcfields 
+| union maxtime=900 maxout=1000000 timeout=930
+    [| rest splunk_server=local /servicesNS/-/-/data/props/calcfields 
     | dedup id 
-    | rename field.name AS field_name, eai:acl.* AS acl_* 
+    | rename field.name AS field_name, eai:acl.* AS acl_*, "*'*'*" AS "***", "*'*" AS "**"
     | table dataSource, title, field_name, stanza, type, attribute, acl_app, acl_owner, acl_sharing, value 
     | eval dataSource = "props-calcfields"] 
-| append 
-    [| rest splunk_server=* /servicesNS/-/-/data/props/extractions 
+
+    [| rest splunk_server=local /servicesNS/-/-/data/props/extractions 
     | dedup id 
-    | rename eai:acl.* AS acl_* 
+    | rename eai:acl.* AS acl_*, "*'*'*" AS "***", "*'*" AS "**"
     | rex field=attribute "^[^-]+-(?<field_name>.+)" 
     | table dataSource, title, field_name, stanza, type, attribute, acl_app, acl_owner, acl_sharing, value 
     | eval dataSource = "props-extractions"] 
-| append 
-    [| rest splunk_server=* /servicesNS/-/-/data/props/fieldaliases 
+
+    [| rest splunk_server=local /servicesNS/-/-/data/props/fieldaliases 
     | dedup id 
+    | rename eai:acl.* AS acl_*, "*'*'*" AS "***", "*'*" AS "**"
     | foreach alias.* 
-        [| eval conf_specific_properties_mv = case(
-            isnull(conf_specific_properties_mv) AND isnotnull('<<FIELD>>'), "<<FIELD>>::::" . '<<FIELD>>', 
-            isnotnull(conf_specific_properties_mv) AND isnotnull('<<FIELD>>'), mvappend(conf_specific_properties_mv, "<<FIELD>>::::" . '<<FIELD>>'), 
-            isnotnull(conf_specific_properties_mv) AND isnull('<<FIELD>>'), conf_specific_properties_mv
-            )] 
-    | rename eai:acl.* AS acl_* 
+        [| eval conf_specific_properties_mv = if( len('<<FIELD>>') > 0, mvappend(conf_specific_properties_mv, "<<FIELD>>::::" . '<<FIELD>>'), conf_specific_properties_mv )]
     | rex field=value "\s[Aa][Ss]\s(?<field_name>.+)$" 
     | table dataSource, title, field_name, stanza, type, attribute, acl_app, acl_owner, acl_sharing, value, conf_specific_properties_mv 
     | eval dataSource = "props-fieldaliases"] 
-| append 
-    [| rest splunk_server=* /servicesNS/-/-/data/props/lookups 
+
+    [| rest splunk_server=local /servicesNS/-/-/data/props/lookups 
     | dedup id 
-    | rename eai:acl.* AS acl_*, transform AS transforms_stanza 
+    | rename eai:acl.* AS acl_*, transform AS transforms_stanza, "*'*'*" AS "***", "*'*" AS "**"
     | fields title, type, attribute, acl_app, acl_owner, acl_sharing, value, overwrite, transforms_stanza 
     | foreach * 
-        [| eval <<FIELD>> = if( match('<<FIELD>>', "."), '<<FIELD>>', null() )] 
+        [| eval <<FIELD>> = if( len('<<FIELD>>') > 0, '<<FIELD>>', null() )] 
     | eval value_modified = replace(value, "\s[Oo][Uu][Tt][Pp][Uu][Tt][Nn][Ee][Ww]\s?", " OUTPUT ") 
     | eval value_modified = if(match(value_modified, "\s[Oo][Uu][Tt][Pp][Uu][Tt]\s"), value_modified, value_modified . " OUTPUT ") 
     | eval value_modified = replace(value_modified, ",", " ") 
@@ -43,34 +38,23 @@
     | rex field=lookup_output_segment_full_concat max_match=0 "(?<lookup_output_extracted_field>[^\s:]+)::::" 
     | eval field_name = if(isnotnull(lookup_output_extracted_field), mvdedup(lookup_output_extracted_field), "All Lookup Fields") 
     | foreach overwrite, transforms_stanza 
-        [| eval conf_specific_properties_mv = case(
-            isnull(conf_specific_properties_mv) AND isnotnull('<<FIELD>>'), "<<FIELD>>::::" . '<<FIELD>>', 
-            isnotnull(conf_specific_properties_mv) AND isnotnull('<<FIELD>>'), mvappend(conf_specific_properties_mv, "<<FIELD>>::::" . '<<FIELD>>'), 
-            isnotnull(conf_specific_properties_mv) AND isnull('<<FIELD>>'), conf_specific_properties_mv)
-            ] 
+        [| eval conf_specific_properties_mv = if( len('<<FIELD>>') > 0, mvappend(conf_specific_properties_mv, "<<FIELD>>::::" . '<<FIELD>>'), conf_specific_properties_mv )]
     | foreach *_segment_full 
-        [| eval conf_specific_properties_mv = case(
-            isnull(conf_specific_properties_mv) AND isnotnull('<<FIELD>>'), "<<MATCHSTR>>::::" . '<<FIELD>>', 
-            isnotnull(conf_specific_properties_mv) AND isnotnull('<<FIELD>>'), mvappend(conf_specific_properties_mv, "<<MATCHSTR>>::::" . '<<FIELD>>'), 
-            isnotnull(conf_specific_properties_mv) AND isnull('<<FIELD>>'), conf_specific_properties_mv)
-            ] 
+        [| eval conf_specific_properties_mv = if( len('<<FIELD>>') > 0, mvappend(conf_specific_properties_mv, "<<MATCHSTR>>::::" . '<<FIELD>>'), conf_specific_properties_mv )]
     | eval stanza = if(match(title, " : "), replace(title, "\s:\s.+", ""), title) 
     | table dataSource, field_name, title, stanza, type, attribute, acl_app, acl_owner, acl_sharing, value, conf_specific_properties_mv 
     | eval dataSource = "props-lookups (automatic lookups)"] 
-| append 
-    [| rest splunk_server=* /servicesNS/-/-/data/transforms/extractions 
+
+    [| rest splunk_server=local /servicesNS/-/-/data/transforms/extractions 
     | dedup id 
-    | rename eai:acl.* AS acl_*, REGEX AS value 
+    | rename eai:acl.* AS acl_*, REGEX AS value, "*'*'*" AS "***", "*'*" AS "**"
     | foreach * 
-        [| eval <<FIELD>> = if( match('<<FIELD>>', "."), '<<FIELD>>', null() )] 
+        [| eval <<FIELD>> = if( len('<<FIELD>>') > 0, '<<FIELD>>', null() )] 
     | foreach FORMAT, CAN_OPTIMIZE, CLEAN_KEYS, DEFAULT_VALUE, SOURCE_KEY, DEST_KEY, WRITE_META, DELIMS, FIELDS, KEEP_EMPTY_VALS, LOOKAHEAD, MATCH_LIMIT, MV_ADD, REPEAT_MATCH 
-        [| eval conf_specific_properties_mv = case(isnull(conf_specific_properties_mv) AND isnotnull('<<FIELD>>'), "<<FIELD>>::::" . '<<FIELD>>', 
-            isnotnull(conf_specific_properties_mv) AND isnotnull('<<FIELD>>'), mvappend(conf_specific_properties_mv, "<<FIELD>>::::" . '<<FIELD>>'), 
-            isnotnull(conf_specific_properties_mv) AND isnull('<<FIELD>>'), conf_specific_properties_mv)
-            ] 
+        [| eval conf_specific_properties_mv = if( len('<<FIELD>>') > 0, mvappend(conf_specific_properties_mv, "<<FIELD>>::::" . '<<FIELD>>'), conf_specific_properties_mv )]
     | eval stanza = title 
     | table dataSource, title, stanza, acl_app, acl_owner, acl_sharing, value, conf_specific_properties_mv 
     | eval dataSource = "transforms-extractions"] 
 | table dataSource, title, field_name, stanza, type, attribute, acl_app, acl_owner, acl_sharing, value, conf_specific_properties_mv 
 | eval stanza = "[" . stanza . "]" 
-| rename title AS endpoint_title 
+| rename title AS endpoint_title
